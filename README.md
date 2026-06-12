@@ -1,24 +1,37 @@
 # Broker Proposal Builder
 
-A simple real estate proposal builder that helps brokers create client-ready proposal PDFs from client requirements, property notes, and investment or leasing details.
+Broker Proposal Builder is a copyable template repo for real estate brokers, leasing professionals, property advisors, and realtors who want a simple proposal generator.
+
+Use it to build client-ready leasing proposals, investment sale memos, and landlord property pitches from client notes, property details, and deal numbers.
+
+This is a GitHub template repository. Click **Use this template** on GitHub to create your own copy, then customize it for your market, brokerage, and proposal style.
+
+It runs with only HTML, CSS, JavaScript, browser `localStorage`, and browser Print / Save as PDF.
 
 This project was adapted and customized from an open-source proposal generator concept and rebuilt for real estate broker workflows.
 
+## Use This Template
+
+1. Click **Use this template** on GitHub.
+2. Create your own copy.
+3. Open the project in Codex, Google Antigravity, VS Code, or any editor.
+4. Open `index.html` or run a local server.
+5. Start customizing proposal types, blocks, and PDF design.
+
 ## What This Is
 
-Broker Proposal Builder is a browser-based tool for creating polished real estate proposals without a backend, login, database, or paid API.
+Broker Proposal Builder is a browser-based starter kit for creating polished real estate proposals without a backend, login, database, or paid API.
 
-It works as a simple starter kit: open the app, add proposal blocks, fill in property/client details, save drafts locally, and print or save the proposal as a PDF.
+Open the app, add proposal blocks, fill in property/client details, save drafts locally, and print or save the proposal as a PDF.
 
-## Who It Is For
+## Best For
 
 - Commercial real estate brokers
-- Leasing consultants
-- Investment sales advisors
+- Leasing professionals
+- Property advisors
+- Investment sales teams
 - Landlord representatives
-- Boutique brokerages
-- Realtors who want a DIY proposal tool
-- Non-technical real estate professionals learning to customize apps with AI coding tools
+- Realtors learning AI coding
 
 ## What It Can Create
 
@@ -27,8 +40,8 @@ It works as a simple starter kit: open the app, add proposal blocks, fill in pro
 - Retail leasing proposals
 - Investment sale proposals
 - Landlord property pitch documents
-- WhatsApp follow-up drafts
-- Email follow-up drafts
+- WhatsApp follow-up drafts for brokers
+- Email follow-up drafts for brokers
 
 ## Key Features
 
@@ -44,6 +57,43 @@ It works as a simple starter kit: open the app, add proposal blocks, fill in pro
 - Responsive layout for desktop, tablet, and mobile
 - HTML, CSS, and JavaScript only
 
+## What You Can Customize
+
+- App name
+- Logo initials
+- Proposal types
+- Proposal blocks
+- Field labels
+- PDF design
+- Accent color
+- Sample data
+- Advisor details
+- Currency formatting
+
+Most beginner-friendly changes happen in these files:
+
+- `index.html` controls the page structure.
+- `style.css` controls the visual design and PDF styling.
+- `scripts.js` controls proposal types, blocks, fields, saving, and preview generation.
+
+Example: to change the accent color, open `style.css` and search for:
+
+```css
+--primary
+```
+
+Example: to change proposal types, open `scripts.js` and search for:
+
+```js
+const proposalTypes
+```
+
+Example: to change proposal blocks, open `scripts.js` and search for:
+
+```js
+const blockTemplates
+```
+
 ## Demo Workflow
 
 1. Click `Create New Proposal`.
@@ -55,6 +105,18 @@ It works as a simple starter kit: open the app, add proposal blocks, fill in pro
 7. Save the draft locally.
 8. Print or save the proposal as a PDF.
 
+## Tutorial Workflow
+
+1. Copy template.
+2. Open in Codex.
+3. Ask Codex to explain the repo.
+4. Customize proposal types.
+5. Edit proposal blocks.
+6. Change PDF design.
+7. Test sample proposal.
+8. Save as PDF.
+9. Deploy if needed.
+
 ## Tech Stack
 
 - HTML
@@ -63,7 +125,15 @@ It works as a simple starter kit: open the app, add proposal blocks, fill in pro
 - Browser `localStorage`
 - Browser print / Save as PDF
 
-No backend, login, database, or API is required.
+## Not Included
+
+- No backend
+- No login
+- No cloud database
+- No payment system
+- No AI API by default
+- No legal/commercial advice
+- Browser `localStorage` only
 
 ## How To Run Locally
 
@@ -102,45 +172,6 @@ This means:
 5. Turn off `Headers and Footers` for a clean PDF.
 6. Save the PDF.
 
-## How To Customize
-
-Most changes happen in these files:
-
-- `index.html` controls the page structure.
-- `style.css` controls the visual design and PDF styling.
-- `scripts.js` controls proposal types, blocks, fields, saving, and preview generation.
-
-Common customizations:
-
-- App name
-- Logo initials
-- Accent color
-- Proposal types
-- Proposal blocks
-- Field labels
-- PDF design
-- Advisor details
-- Currency
-- Example sample data
-
-Example: to change the accent color, open `style.css` and search for:
-
-```css
---primary
-```
-
-Example: to change proposal types, open `scripts.js` and search for:
-
-```js
-const proposalTypes
-```
-
-Example: to change proposal blocks, open `scripts.js` and search for:
-
-```js
-const blockTemplates
-```
-
 ## How To Use This Repo With Codex
 
 Open this folder in Codex, Google Antigravity, VS Code, or another AI coding tool and ask it to make focused changes.
@@ -173,6 +204,21 @@ See `PROMPTS.md` for copy-paste prompts.
 - Large property photos can use browser storage quickly.
 - Browser print headers/footers must be turned off manually.
 
+## Disclaimer
+
+This tool is for proposal generation and educational purposes. Users should verify all property details, legal terms, title documents, taxes, service charges, and commercial assumptions before sharing with clients or making decisions.
+
+## Before Recording Your Tutorial
+
+- Repo is public
+- Repo is marked as template
+- README is clear
+- LICENSE is present
+- Sample inputs are added
+- App runs locally
+- PDF prints cleanly
+- Browser headers/footers are turned off before saving PDF
+
 ## Roadmap
 
 Possible future improvements:
@@ -194,19 +240,3 @@ The original repository license is MIT and includes the copyright notice in `LIC
 ## License
 
 MIT License. See `LICENSE`.
-
-## Recommended GitHub Description
-
-DIY real estate proposal builder for brokers -- create client-ready leasing and investment proposal PDFs using HTML, CSS, JavaScript, and localStorage.
-
-## Recommended GitHub Topics
-
-- real-estate
-- proptech
-- proposal-generator
-- broker-tools
-- localstorage
-- html-css-javascript
-- ai-coding
-- codex
-- commercial-real-estate
