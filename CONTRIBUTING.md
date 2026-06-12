@@ -76,8 +76,10 @@ Since this is a client-side application, testing involves:
 - Opening `index.html` in different browsers (Chrome, Firefox, Safari, Edge)
 - Testing on different screen sizes (desktop, tablet, mobile)
 - Verifying all features work as expected:
-  - Service selection
-  - Package selection
+  - Proposal type selection
+  - Client requirement entry
+  - Property detail entry
+  - Output type selection
   - Proposal generation
   - PDF download
 - Checking console for JavaScript errors

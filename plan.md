@@ -10,7 +10,7 @@ This document outlines the potential future enhancements and long-term plans for
 
 - **Improve User Experience**:
   - Add a progress bar to show the user's current step in the proposal generation process.
-  - Provide real-time cost estimation as the user selects different packages.
+  - Provide a live proposal preview as the broker enters client and property details.
 
 - **Refactor with a Frontend Framework**:
   - Rebuild the frontend using a modern JavaScript framework like **React** or **Vue.js**.
@@ -22,9 +22,9 @@ This document outlines the potential future enhancements and long-term plans for
   - Add a form for clients to enter their personal and company details (e.g., name, email, company name).
   - Include a section for clients to provide a brief description of their project requirements.
 
-- **Customizable Packages**:
-  - Allow users to create custom packages by selecting individual features from a list.
-  - This will provide more flexibility than the current predefined packages.
+- **Customizable Proposal Templates**:
+  - Allow users to adjust proposal sections for leasing, sales, investment, and landlord pitch workflows.
+  - Keep template changes simple enough for brokers to customize without a framework.
 
 - **Enhanced PDF Proposals**:
   - Improve the design of the generated PDF proposal to be more professional and visually appealing.

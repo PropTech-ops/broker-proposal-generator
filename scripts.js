@@ -1,556 +1,492 @@
-// initialize current step
-window.currentStep = 1;
+const proposalTypes = [
+    {
+        id: "officeLeasing",
+        name: "Office Leasing Proposal",
+        description: "Prepare a client-ready office leasing recommendation with requirement fit, property terms, and next steps."
+    },
+    {
+        id: "warehouseLeasing",
+        name: "Warehouse Leasing Proposal",
+        description: "Prepare an industrial or warehouse proposal covering area, location, loading, power, rent, and lease terms."
+    },
+    {
+        id: "retailLeasing",
+        name: "Retail Leasing Proposal",
+        description: "Prepare a retail proposal for shops, high street units, or mall spaces with frontage, rent, CAM, and fit-out notes."
+    },
+    {
+        id: "investmentSale",
+        name: "Investment Sale Proposal",
+        description: "Prepare an investor proposal with property overview, commercial terms, income, yield context, risks, and recommendation."
+    },
+    {
+        id: "landlordPitch",
+        name: "Landlord Property Pitch",
+        description: "Prepare a landlord-facing pitch to present a property professionally to tenants, brokers, or occupiers."
+    }
+];
+
+const state = {
+    currentStep: 1,
+    proposalType: "",
+    outputType: "",
+    client: {},
+    property: {},
+    advisor: {}
+};
 
 document.addEventListener("DOMContentLoaded", () => {
-    const preloader = document.getElementById('preloader');
-    const progressBar = preloader.querySelector('.progress-bar');
-    let progress = 0;
-
-    // applyBackground();  // moved to CSS — commented out to avoid duplication
-
-    const interval = setInterval(() => {
-        progress += 10;
-        progressBar.style.width = progress + '%';
-        progressBar.setAttribute('aria-valuenow', progress);
-
-        if (progress >= 100) {
-            clearInterval(interval);
-            setTimeout(() => {
-                preloader.style.display = 'none';
-            }, 500);
-        }
-    }, 200);
-
-    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR4YHLJ-QG-5mniI5lWB9KsfvItj2zngZwIQa0Lb-FD4O0sYCRUTb_LcOZPxFYY_w5_rASmd_TaXipw/pub?gid=0&single=true&output=csv";
-    const cacheBustedUrl = `${csvUrl}&_=${new Date().getTime()}`;
-
-    // improved fetch + UI fallback (replaces the Promise.all ... then(...) block)
-    Promise.allSettled([
-        fetch("data.json").then(r => r.json()),
-        fetch(cacheBustedUrl).then(r => r.text())
-    ]).then(results => {
-        const localResult = results[0];
-        const csvResult = results[1];
-
-        if (localResult.status !== 'fulfilled') {
-            console.error('Failed to load local data.json', localResult.reason);
-            // show minimal error to user
-            document.getElementById('service-preloader').classList.add('d-none');
-            const errDiv = document.createElement('div');
-            errDiv.className = 'alert alert-danger';
-            errDiv.textContent = 'Failed to load services data.';
-            document.getElementById('serviceForm').appendChild(errDiv);
-            return;
-        }
-
-        window.proposalData = localResult.value;
-
-        let csvDataText = null;
-        if (csvResult && csvResult.status === 'fulfilled') {
-            csvDataText = csvResult.value;
-        } else {
-            console.warn('CSV fetch failed, using local data only.', csvResult && csvResult.reason);
-        }
-
-        const digitalMarketingService = window.proposalData.services.find(s => s.id === "digitalMarketing");
-        if (digitalMarketingService) {
-            if (csvDataText) {
-                digitalMarketingService.packages = parseCsv(csvDataText);
-            } else if (!Array.isArray(digitalMarketingService.packages)) {
-                digitalMarketingService.packages = [];
-            }
-        }
-
-        const serviceForm = document.getElementById("serviceForm");
-        window.proposalData.services.forEach(service => {
-            const serviceDiv = document.createElement("div");
-            serviceDiv.className = "form-check";
-
-            const input = document.createElement('input');
-            input.type = 'checkbox';
-            input.className = 'form-check-input';
-            input.id = service.id;
-            input.name = 'service';
-            input.value = service.name;
-
-            const label = document.createElement('label');
-            label.className = 'form-check-label';
-            label.htmlFor = service.id;
-            label.textContent = service.name;
-
-            const small = document.createElement('small');
-            small.className = 'form-text text-muted';
-            small.textContent = service.description;
-
-            serviceDiv.appendChild(input);
-            serviceDiv.appendChild(label);
-            serviceDiv.appendChild(document.createElement('br'));
-            serviceDiv.appendChild(small);
-
-            serviceForm.appendChild(serviceDiv);
-        });
-
-        // Improve: disable Next until a service is selected and toggle on change
-        const nextBtn = document.getElementById("nextStepButton");
-        if (nextBtn) nextBtn.disabled = true;
-        serviceForm.addEventListener('change', () => {
-            const anyChecked = serviceForm.querySelectorAll('input[name="service"]:checked').length > 0;
-            if (nextBtn) nextBtn.disabled = !anyChecked;
-        });
-
-        document.getElementById("service-preloader").classList.add("d-none");
-        serviceForm.classList.remove("d-none");
-        if (nextBtn) nextBtn.classList.remove("d-none");
-    }).catch(err => {
-        console.error('Unexpected error loading data', err);
-    });
-
-    const themeToggleBtn = document.getElementById("themeToggle");
-
-    // Load saved theme
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark") {
-        document.body.classList.add("dark-theme");
-        themeToggleBtn.textContent = "☀️ Light Mode";
-        themeToggleBtn.classList.replace("btn-dark", "btn-light");
-    }
-
-    themeToggleBtn.addEventListener("click", () => {
-        document.body.classList.toggle("dark-theme");
-
-        const isDark = document.body.classList.contains("dark-theme");
-
-        // Update button & save
-        if (isDark) {
-            themeToggleBtn.textContent = "☀️ Light Mode";
-            themeToggleBtn.classList.replace("btn-dark", "btn-light");
-            localStorage.setItem("theme", "dark");
-        } else {
-            themeToggleBtn.textContent = "🌙 Dark Mode";
-            themeToggleBtn.classList.replace("btn-light", "btn-dark");
-            localStorage.setItem("theme", "light");
-        }
-    });
+    setupTheme();
+    renderProposalTypes();
+    bindEvents();
+    updatePreview();
 });
 
-// improved parseCsv: trim BOM, support CRLF, keep quoted newlines (only minor tweaks)
-function parseCsv(csv) {
-    if (!csv) return [];
-    // Remove BOM if present
-    if (csv.charCodeAt(0) === 0xFEFF) csv = csv.slice(1);
-    const lines = csv.replace(/\r\n/g, '\n').split('\n').filter(line => line.trim() !== '');
-    if (lines.length < 2) {
-        console.error("CSV data is too short to contain headers and data.");
-        return [];
+function setupTheme() {
+    const toggle = document.getElementById("themeToggle");
+    const savedTheme = localStorage.getItem("theme");
+
+    if (savedTheme === "dark") {
+        document.body.classList.add("dark-theme");
+        toggle.textContent = "Light Mode";
+        toggle.setAttribute("aria-pressed", "true");
     }
 
-    const parseCsvLine = (line) => {
-        const values = [];
-        let inQuote = false;
-        let currentField = "";
-        for (let i = 0; i < line.length; i++) {
-            const char = line[i];
-            if (char === '"') {
-                if (inQuote && i + 1 < line.length && line[i + 1] === '"') {
-                    currentField += '"';
-                    i++;
-                } else {
-                    inQuote = !inQuote;
-                }
-            } else if (char === ',' && !inQuote) {
-                values.push(currentField);
-                currentField = "";
-            } else {
-                currentField += char;
-            }
-        }
-        values.push(currentField);
-        // Do NOT trim inside quotes; trim outer whitespace
-        return values.map(v => v.trim());
+    toggle.addEventListener("click", () => {
+        const isDark = document.body.classList.toggle("dark-theme");
+        toggle.textContent = isDark ? "Light Mode" : "Dark Mode";
+        toggle.setAttribute("aria-pressed", String(isDark));
+        localStorage.setItem("theme", isDark ? "dark" : "light");
+    });
+}
+
+function renderProposalTypes() {
+    const grid = document.getElementById("proposalTypeGrid");
+    grid.innerHTML = "";
+
+    proposalTypes.forEach(type => {
+        const card = document.createElement("div");
+        card.className = "choice-card";
+        card.innerHTML = `
+            <label for="${type.id}">
+                <input id="${type.id}" name="proposalType" type="radio" value="${type.name}">
+                <span class="choice-title">${type.name}</span>
+                <span class="choice-desc">${type.description}</span>
+            </label>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function bindEvents() {
+    document.querySelectorAll("[data-next-step]").forEach(button => {
+        button.addEventListener("click", () => {
+            const nextStep = Number(button.dataset.nextStep);
+            if (validateStep(state.currentStep)) showStep(nextStep);
+        });
+    });
+
+    document.querySelectorAll("[data-back-step]").forEach(button => {
+        button.addEventListener("click", () => showStep(Number(button.dataset.backStep)));
+    });
+
+    document.getElementById("generateProposalBtn").addEventListener("click", () => {
+        if (validateStep(4)) showStep(5);
+    });
+
+    document.getElementById("downloadBtn").addEventListener("click", exportPdf);
+    document.getElementById("copyWhatsappBtn").addEventListener("click", copyWhatsappMessage);
+    document.getElementById("startOverBtn").addEventListener("click", resetApp);
+
+    document.getElementById("proposalForm").addEventListener("input", () => {
+        collectFormData();
+        clearErrors();
+        updatePreview();
+    });
+}
+
+function collectFormData() {
+    const selectedProposalType = document.querySelector('input[name="proposalType"]:checked');
+    const selectedOutputType = document.querySelector('input[name="outputType"]:checked');
+
+    state.proposalType = selectedProposalType ? selectedProposalType.value : "";
+    state.outputType = selectedOutputType ? selectedOutputType.value : "";
+
+    state.client = {
+        clientName: getValue("clientName"),
+        companyName: getValue("companyName"),
+        requirementType: getValue("requirementType"),
+        city: getValue("city"),
+        preferredLocation: getValue("preferredLocation"),
+        areaRequired: getValue("areaRequired"),
+        budget: getValue("budget"),
+        timeline: getValue("timeline"),
+        importantNotes: getValue("importantNotes"),
+        messyClientRequirement: getValue("messyClientRequirement")
     };
 
-    const headerLine = lines[0];
-    const headers = parseCsvLine(headerLine);
+    state.property = {
+        propertyName: getValue("propertyName"),
+        propertyLocation: getValue("propertyLocation"),
+        propertyArea: getValue("propertyArea"),
+        price: getValue("price"),
+        cam: getValue("cam"),
+        securityDeposit: getValue("securityDeposit"),
+        lockInPeriod: getValue("lockInPeriod"),
+        leaseTerm: getValue("leaseTerm"),
+        escalation: getValue("escalation"),
+        availability: getValue("availability"),
+        keyHighlights: getValue("keyHighlights"),
+        redFlags: getValue("redFlags"),
+        propertyNotes: getValue("propertyNotes")
+    };
 
-    const packages = [];
+    state.advisor = {
+        advisorName: getValue("advisorName"),
+        advisorPhone: getValue("advisorPhone"),
+        advisorEmail: getValue("advisorEmail")
+    };
+}
 
-    for (let i = 1; i < headers.length; i++) {
-        const pkg = {
-            id: headers[i].replace(/\s+/g, '-').toLowerCase(),
-            name: headers[i],
-            price: "",
-            features: "",
-            fullDescription: ""
-        };
-        let description = "";
+function getValue(id) {
+    const field = document.getElementById(id);
+    return field ? field.value.trim() : "";
+}
 
-        for (let j = 1; j < lines.length; j++) {
-            const rowValues = parseCsvLine(lines[j]);
-            const featureName = rowValues[0] || "";
-            const featureValue = rowValues[i] || "";
+function validateStep(step) {
+    collectFormData();
 
-            if (featureName.toLowerCase() === 'total cost') {
-                const numeric = featureValue.replace(/[^0-9.]/g, '');
-                pkg.price = numeric ? `NRs ${Number(numeric).toLocaleString()}` : `NRs ${featureValue}`;
-            } else if (featureName) {
-                description += `${featureName}: ${featureValue}\n`;
-            }
-        }
-        pkg.fullDescription = description.trim();
-        pkg.features = description.split('\n').filter(f => f.trim() !== '').slice(0, 2).join(', ');
-        packages.push(pkg);
+    if (step === 1 && !state.proposalType) {
+        showError("proposalTypeError", "Choose one proposal type to continue.");
+        return false;
     }
-    return packages;
-}
 
-function clearSelection() {
-    const checkboxes = document.querySelectorAll('input[name="service"]');
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = false;
-    });
-}
-
-function selectAllServices() {
-    const checkboxes = document.querySelectorAll('input[name="service"]');
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = true;
-    });
-}
-
-// safer price parsing and thousands-separator handling (replace updateTotalCost)
-function updateTotalCost() {
-    let totalCost = 0.0;
-    const selectedPackages = document.querySelectorAll('input[type="radio"]:checked');
-
-    selectedPackages.forEach(pkgRadio => {
-        const serviceId = pkgRadio.dataset.service;
-        const service = window.proposalData && window.proposalData.services && window.proposalData.services.find(s => s.id === serviceId);
-        if (service) {
-            const pkg = service.packages.find(p => p.name === pkgRadio.value);
-            if (pkg && pkg.price) {
-                // keep digits and decimal point, remove commas/currency
-                const cleaned = pkg.price.replace(/[^0-9.,]/g, '').replace(/,/g, '');
-                const value = parseFloat(cleaned) || 0;
-                totalCost += value;
-            }
+    if (step === 2) {
+        const required = ["clientName", "companyName", "requirementType", "city", "preferredLocation", "areaRequired", "budget", "timeline"];
+        if (required.some(key => !state.client[key])) {
+            showError("clientError", "Complete the main client requirement fields before continuing.");
+            return false;
         }
+    }
+
+    if (step === 3) {
+        const required = ["propertyName", "propertyLocation", "propertyArea", "price", "keyHighlights"];
+        if (required.some(key => !state.property[key])) {
+            showError("propertyError", "Complete property name, location, area, price, and key highlights.");
+            return false;
+        }
+    }
+
+    if (step === 4 && !state.outputType) {
+        showError("generateError", "Choose the output type you want to generate.");
+        return false;
+    }
+
+    return true;
+}
+
+function showError(id, message) {
+    clearErrors();
+    document.getElementById(id).textContent = message;
+}
+
+function clearErrors() {
+    ["proposalTypeError", "clientError", "propertyError", "generateError"].forEach(id => {
+        document.getElementById(id).textContent = "";
+    });
+}
+
+function showStep(step) {
+    state.currentStep = step;
+
+    document.querySelectorAll(".step-view").forEach(view => {
+        view.classList.toggle("is-active", Number(view.dataset.step) === step);
     });
 
-    // show as integer if whole number, otherwise show two decimals
-    const formatted = Number.isInteger(totalCost) ? totalCost.toLocaleString() : totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const costEl = document.getElementById('totalCost');
-    if (costEl) costEl.innerText = `NRs ${formatted}`;
+    document.querySelectorAll("[data-step-indicator]").forEach(item => {
+        const itemStep = Number(item.dataset.stepIndicator);
+        item.classList.toggle("is-active", itemStep === step);
+        item.classList.toggle("is-complete", itemStep < step);
+    });
+
+    updatePreview();
+    window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-function updateProgressBar(step) {
-    const totalSteps = 3;
-    const newStep = Math.max(1, Math.min(totalSteps, Number(step) || 1));
-    window.currentStep = newStep;
+function updatePreview() {
+    collectFormData();
 
-    // FIX → target the visible progress bar
-    const bars = Array.from(document.querySelectorAll('.progress-fill'));
-    let progressBar = bars.find(b => b.offsetParent !== null) || bars[0];
-    if (!progressBar) return;
+    document.getElementById("summaryProposalType").textContent = state.proposalType || "Select a proposal type";
+    document.getElementById("summaryClient").textContent = state.client.clientName
+        ? `${state.client.clientName}${state.client.companyName ? `, ${state.client.companyName}` : ""}`
+        : "Client details will appear here.";
+    document.getElementById("previewTitle").textContent = state.property.propertyName || state.proposalType || "Proposal preview";
 
-    const percentage = (newStep / totalSteps) * 100;
-    progressBar.style.width = `${percentage}%`;
-    progressBar.textContent = `Step ${newStep}`;
+    document.getElementById("proposalPreview").innerHTML = `
+        <section class="proposal-section output-focus">
+            <h3>Selected output</h3>
+            <p>${outputSummary()}</p>
+        </section>
+        <section class="proposal-section">
+            <h3>Executive summary</h3>
+            <p>${executiveSummary()}</p>
+        </section>
+        <section class="proposal-section">
+            <h3>Client requirement summary</h3>
+            ${listItems([
+                ["Client", state.client.clientName],
+                ["Company", state.client.companyName],
+                ["Requirement", state.client.requirementType],
+                ["City", state.client.city],
+                ["Preferred location", state.client.preferredLocation],
+                ["Area required", state.client.areaRequired],
+                ["Budget", state.client.budget],
+                ["Timeline", state.client.timeline],
+                ["Important notes", state.client.importantNotes],
+                ["Raw client note", state.client.messyClientRequirement]
+            ])}
+        </section>
+        <section class="proposal-section">
+            <h3>Property overview</h3>
+            ${listItems([
+                ["Property", state.property.propertyName],
+                ["Location", state.property.propertyLocation],
+                ["Area", state.property.propertyArea],
+                ["Availability", state.property.availability],
+                ["Key highlights", state.property.keyHighlights],
+                ["Raw property notes", state.property.propertyNotes]
+            ])}
+        </section>
+        <section class="proposal-section">
+            <h3>Commercial terms table</h3>
+            ${commercialTermsTable()}
+        </section>
+        <section class="proposal-section">
+            <h3>Why this property fits</h3>
+            <p>${whyItFits()}</p>
+        </section>
+        <section class="proposal-section">
+            <h3>Risks / points to verify</h3>
+            <p>${valueOrFallback(state.property.redFlags, "Confirm CAM breakup, final chargeable area, parking allocation, legal title, handover date, and all commercial terms before closure.")}</p>
+        </section>
+        <section class="proposal-section">
+            <h3>Recommended next steps</h3>
+            ${listItems([
+                ["1", "Confirm whether the location, budget, and area match the client requirement."],
+                ["2", "Arrange a site visit or property walkthrough."],
+                ["3", "Verify commercial terms, documents, and negotiation points."],
+                ["4", "Share final offer or letter of intent after client approval."]
+            ], true)}
+        </section>
+        <section class="proposal-section">
+            <h3>Advisor contact details</h3>
+            ${listItems([
+                ["Advisor", state.advisor.advisorName],
+                ["Phone", state.advisor.advisorPhone],
+                ["Email", state.advisor.advisorEmail]
+            ])}
+        </section>
+        <section class="proposal-section">
+            <h3>Client follow-up WhatsApp message</h3>
+            <div class="message-box">${whatsappMessage()}</div>
+        </section>
+        <section class="proposal-section">
+            <h3>Email draft</h3>
+            <div class="message-box">${emailDraft()}</div>
+        </section>
+    `;
 }
 
+function outputSummary() {
+    const outputNotes = {
+        "Quick WhatsApp Summary": "Generate a short, practical message for quick client follow-up.",
+        "Client Email Draft": "Generate a polished email with context, recommendation, risks, and next steps.",
+        "Professional PDF Proposal": "Generate a structured proposal preview that can be exported as a PDF."
+    };
 
-function nextStep() {
-    const selectedServices = Array.from(document.querySelectorAll('input[name="service"]:checked')).map(cb => cb.id);
-    if (selectedServices.length === 0) {
-        // show a brief warning instead of proceeding
-        const warn = document.createElement('div');
-        warn.className = 'alert alert-warning mt-2';
-        warn.textContent = 'Please select at least one service to continue.';
-        const container = document.getElementById('service-selection');
-        // remove existing warns
-        const existing = container.querySelectorAll('.alert-warning');
-        existing.forEach(n => n.remove());
-        container.insertBefore(warn, container.firstChild);
+    return outputNotes[state.outputType] || "Choose an output type in Step 4 to shape the final proposal format.";
+}
+
+function executiveSummary() {
+    if (!state.proposalType && !state.client.clientName && !state.property.propertyName) {
+        return "Start by selecting a proposal type and filling client/property details. The proposal will build itself here as you type.";
+    }
+
+    return `${valueOrFallback(state.proposalType, "This proposal")} is prepared for ${valueOrFallback(state.client.clientName, "the client")} of ${valueOrFallback(state.client.companyName, "the client company")}. It recommends ${valueOrFallback(state.property.propertyName, "the property")} at ${valueOrFallback(state.property.propertyLocation, "the proposed location")} for a ${valueOrFallback(state.client.requirementType, "real estate")} requirement.`;
+}
+
+function whyItFits() {
+    return `${valueOrFallback(state.property.propertyName, "This property")} appears relevant because it is in ${valueOrFallback(state.property.propertyLocation, "the preferred market")}, offers ${valueOrFallback(state.property.propertyArea, "the required area")}, and can be evaluated against the client's budget of ${valueOrFallback(state.client.budget, "the stated budget")}. Key highlights: ${valueOrFallback(state.property.keyHighlights, "Add property highlights to make this section stronger.")}`;
+}
+
+function commercialTermsTable() {
+    const rows = [
+        ["Rent or sale price", state.property.price],
+        ["Maintenance / CAM", state.property.cam],
+        ["Security deposit", state.property.securityDeposit],
+        ["Lock-in period", state.property.lockInPeriod],
+        ["Lease term", state.property.leaseTerm],
+        ["Escalation", state.property.escalation],
+        ["Availability", state.property.availability]
+    ];
+
+    return `
+        <table>
+            <tbody>
+                ${rows.map(([label, value]) => `<tr><th>${escapeHtml(label)}</th><td>${escapeHtml(valueOrFallback(value, "To be confirmed"))}</td></tr>`).join("")}
+            </tbody>
+        </table>
+    `;
+}
+
+function listItems(items, keepLabelsSmall = false) {
+    return `
+        <ul>
+            ${items
+                .filter(([, value]) => value)
+                .map(([label, value]) => `<li><strong>${escapeHtml(label)}${keepLabelsSmall ? "." : ":"}</strong> ${escapeHtml(value)}</li>`)
+                .join("") || "<li>Details will appear here as you fill the form.</li>"}
+        </ul>
+    `;
+}
+
+function whatsappMessage() {
+    return escapeHtml(`Hi ${state.client.clientName || "Client"}, sharing a quick summary for ${state.property.propertyName || "the shortlisted property"} at ${state.property.propertyLocation || "the proposed location"}.
+
+Area: ${state.property.propertyArea || "To be confirmed"}
+Price/Rent: ${state.property.price || "To be confirmed"}
+CAM: ${state.property.cam || "To be confirmed"}
+Availability: ${state.property.availability || "To be confirmed"}
+
+Why it fits: ${whyItFits()}
+
+Next step: Please confirm if you would like to schedule a visit or discuss negotiation points.`);
+}
+
+function emailDraft() {
+    return escapeHtml(`Subject: ${state.property.propertyName || "Property"} proposal for your ${state.client.requirementType || "real estate"} requirement
+
+Dear ${state.client.clientName || "Client"},
+
+As discussed, please find below a proposal for ${state.property.propertyName || "the shortlisted property"} in ${state.property.propertyLocation || "the proposed location"}.
+
+The property has been considered against your requirement for ${state.client.areaRequired || "the required area"} in ${state.client.preferredLocation || "the preferred location"}, with a budget of ${state.client.budget || "the stated budget"} and timeline of ${state.client.timeline || "the required timeline"}.
+
+Key property highlights:
+${state.property.keyHighlights || "To be added"}
+
+Commercial terms:
+Rent/Sale Price: ${state.property.price || "To be confirmed"}
+Maintenance/CAM: ${state.property.cam || "To be confirmed"}
+Security Deposit: ${state.property.securityDeposit || "To be confirmed"}
+Lease Term: ${state.property.leaseTerm || "To be confirmed"}
+
+Recommended next step:
+Let us verify pending terms and schedule a site visit or commercial discussion.
+
+Regards,
+${state.advisor.advisorName || "Your Real Estate Advisor"}
+${state.advisor.advisorPhone || ""}
+${state.advisor.advisorEmail || ""}`);
+}
+
+function valueOrFallback(value, fallback) {
+    return value && value.trim ? value.trim() : fallback;
+}
+
+function exportPdf() {
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert("PDF library is still loading. Please try again in a moment.");
         return;
     }
 
-    document.getElementById("service-selection").classList.add("d-none");
-    document.getElementById("package-questions").classList.remove("d-none");
-    // increment step (max 3)
-    updateProgressBar(Math.min(3, window.currentStep + 1));
-
-    const packageOptionsContainer = document.getElementById("package-options-container");
-    packageOptionsContainer.innerHTML = "";
-
-    // fallback for debounced updater
-    const debouncedUpdater = window.debouncedUpdateTotalCost || updateTotalCost;
-
-    selectedServices.forEach(serviceId => {
-        const service = window.proposalData.services.find(s => s.id === serviceId);
-        if (service) {
-            const serviceOptionsDiv = document.createElement("div");
-            serviceOptionsDiv.className = "service-options mb-4";
-
-            const h5 = document.createElement('h5');
-            h5.textContent = `${service.name} Packages:`;
-            serviceOptionsDiv.appendChild(h5);
-
-            if (service.packages && service.packages.length > 0) {
-                const btnWrap = document.createElement('div');
-                btnWrap.className = 'mb-2';
-
-                const selectFirstBtn = document.createElement('button');
-                selectFirstBtn.type = 'button';
-                selectFirstBtn.className = 'btn btn-sm btn-outline-primary mr-2';
-                selectFirstBtn.textContent = 'Select First';
-                selectFirstBtn.setAttribute('aria-label', `Select first package for ${service.name}`);
-                selectFirstBtn.addEventListener('click', () => toggleAllPackages(service.id, true));
-
-                const deselectBtn = document.createElement('button');
-                deselectBtn.type = 'button';
-                deselectBtn.className = 'btn btn-sm btn-outline-secondary';
-                deselectBtn.textContent = 'Deselect All';
-                deselectBtn.setAttribute('aria-label', `Deselect all packages for ${service.name}`);
-                deselectBtn.addEventListener('click', () => toggleAllPackages(service.id, false));
-
-                btnWrap.appendChild(selectFirstBtn);
-                btnWrap.appendChild(deselectBtn);
-                serviceOptionsDiv.appendChild(btnWrap);
-            }
-
-            (service.packages || []).forEach(pkg => {
-                const packageDiv = document.createElement("div");
-                packageDiv.className = "form-check";
-
-                const input = document.createElement('input');
-                input.type = 'radio';
-                input.className = 'form-check-input';
-                input.name = `${service.id}Package`;
-                input.id = pkg.id;
-                input.value = pkg.name;
-                input.dataset.service = service.id;
-                input.setAttribute('aria-label', `${pkg.name} option for ${service.name}`);
-                input.addEventListener('change', debouncedUpdater);
-
-                const label = document.createElement('label');
-                label.className = 'form-check-label radio-label';
-                label.htmlFor = pkg.id;
-                label.textContent = `${pkg.name} - ${pkg.price}`;
-
-                const small = document.createElement('small');
-                small.className = 'form-text text-muted';
-                small.textContent = pkg.features || '';
-
-                packageDiv.appendChild(input);
-                packageDiv.appendChild(label);
-                packageDiv.appendChild(document.createElement('br'));
-                packageDiv.appendChild(small);
-
-                serviceOptionsDiv.appendChild(packageDiv);
-            });
-
-            packageOptionsContainer.appendChild(serviceOptionsDiv);
-        }
-    });
-    updateTotalCost();
-}
-
-function toggleAllPackages(serviceId, select) {
-    const radioButtons = document.querySelectorAll(`input[name="${serviceId}Package"]`);
-    if (select) {
-        if (radioButtons.length > 0) {
-            radioButtons[0].checked = true;
-            radioButtons[0].dispatchEvent(new Event('change', { bubbles: true }));
-        }
-    } else {
-        radioButtons.forEach(radio => {
-            radio.checked = false;
-            radio.dispatchEvent(new Event('change', { bubbles: true }));
-        });
-    }
-    // use debounced updater as a final guarantee
-    if (window.debouncedUpdateTotalCost) window.debouncedUpdateTotalCost();
-}
-
-function prevStep(step) {
-    if (step === 1) {
-        document.getElementById("package-questions").classList.add("d-none");
-        document.getElementById("service-selection").classList.remove("d-none");
-        // decrement step (min 1)
-        updateProgressBar(Math.max(1, (window.currentStep || 1) - 1));
-    } else if (step === 2) {
-        document.getElementById("proposal").classList.add("d-none");
-        document.getElementById("package-questions").classList.remove("d-none");
-        // decrement step (min 1)
-        updateProgressBar(Math.max(1, (window.currentStep || 1) - 1));
-    }
-}
-
-function generateProposal() {
-    document.getElementById("package-questions").classList.add("d-none");
-    document.getElementById("proposal").classList.remove("d-none");
-    updateProgressBar(3);
-
-    const currentDate = new Date();
-    const publishedDate = currentDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    
-    const expiryDate = new Date();
-    expiryDate.setDate(currentDate.getDate() + 3);
-    const formattedExpiryDate = expiryDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-
-    const fragment = document.createDocumentFragment();
-
-    const headerDiv = document.createElement('div');
-    headerDiv.className = 'proposal-header';
-    const pDate = document.createElement('p');
-    pDate.innerHTML = `<strong>Date Published:</strong> ${publishedDate}`;
-    const pExpiry = document.createElement('p');
-    pExpiry.innerHTML = `<strong>Proposal Expiry:</strong> ${formattedExpiryDate}`;
-    headerDiv.appendChild(pDate);
-    headerDiv.appendChild(pExpiry);
-    fragment.appendChild(headerDiv);
-
-    fragment.appendChild(document.createElement('hr'));
-
-    const h4 = document.createElement('h4');
-    h4.textContent = 'Proposal Details';
-    fragment.appendChild(h4);
-
-    const intro = document.createElement('p');
-    intro.textContent = 'Based on your selections, here are the details of the packages you\'ve chosen:';
-    fragment.appendChild(intro);
-
-    const selectedPackages = document.querySelectorAll('input[type="radio"]:checked');
-    let totalCost = 0.0;
-
-    selectedPackages.forEach(pkgRadio => {
-        const serviceId = pkgRadio.dataset.service;
-        const service = window.proposalData.services.find(s => s.id === serviceId);
-        if (service) {
-            const pkg = service.packages.find(p => p.name === pkgRadio.value);
-            if (pkg) {
-                const packageDiv = document.createElement('div');
-                packageDiv.className = 'package-details';
-
-                const title = document.createElement('h5');
-                title.textContent = `${service.name} Package: ${pkg.name}`;
-                packageDiv.appendChild(title);
-
-                const priceP = document.createElement('p');
-                priceP.innerHTML = `<strong>Price:</strong> ${pkg.price}`;
-                packageDiv.appendChild(priceP);
-
-                // fullDescription lines -> safe text nodes with <br>
-                const descContainer = document.createElement('p');
-                const lines = (pkg.fullDescription || '').split(/\n+/).filter(Boolean);
-                lines.forEach((line, idx) => {
-                    const txt = document.createTextNode(line);
-                    descContainer.appendChild(txt);
-                    if (idx < lines.length - 1) descContainer.appendChild(document.createElement('br'));
-                });
-                packageDiv.appendChild(descContainer);
-
-                fragment.appendChild(packageDiv);
-
-                const cleaned = (pkg.price || '').replace(/[^0-9.,]/g, '').replace(/,/g, '');
-                totalCost += parseFloat(cleaned) || 0;
-            }
-        }
-    });
-
-    fragment.appendChild(document.createElement('hr'));
-
-    const totalDiv = document.createElement('div');
-    totalDiv.className = 'text-right';
-    const totalH5 = document.createElement('h5');
-    const formattedTotal = Number.isInteger(totalCost) ? totalCost.toLocaleString() : totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    totalH5.textContent = `Total Cost: NRs ${formattedTotal}`;
-    totalDiv.appendChild(totalH5);
-    fragment.appendChild(totalDiv);
-
-    fragment.appendChild(document.createElement('hr'));
-
-    const nextStepsDiv = document.createElement('div');
-    nextStepsDiv.className = 'next-steps mt-4 text-center';
-    const nextStepsP = document.createElement('p');
-    nextStepsP.innerHTML = '<strong>Ready to proceed?</strong> Schedule an online meeting with us:<br><a href="https://calendly.com/arjankc" target="_blank">https://calendly.com/arjankc</a>';
-    nextStepsDiv.appendChild(nextStepsP);
-    fragment.appendChild(nextStepsDiv);
-
-    const preview = document.getElementById("proposalPreview");
-    if (preview) {
-        preview.innerHTML = '';
-        preview.appendChild(fragment);
-    }
-    const costEl = document.getElementById('totalCost');
-    if (costEl) costEl.innerText = `NRs ${formattedTotal}`;
-}
-
-function resetForm() {
-    document.getElementById("serviceForm").reset();
-    document.getElementById("package-options-container").innerHTML = "";
-    document.getElementById("proposal").classList.add("d-none");
-    document.getElementById("service-selection").classList.remove("d-none");
-    updateProgressBar(1);
-}
-
-function downloadPDF() {
+    collectFormData();
     const { jsPDF } = window.jspdf;
-    const proposal = document.getElementById('proposalPreview');
-    if (!proposal) return;
-    const originalMaxHeight = proposal.style.maxHeight;
-    const originalOverflowY = proposal.style.overflowY;
+    const pdf = new jsPDF({ orientation: "p", unit: "pt", format: "a4" });
+    const margin = 48;
+    const width = pdf.internal.pageSize.getWidth() - margin * 2;
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    let y = margin;
 
-    // Temporarily remove height restrictions to capture the whole content
-    proposal.style.maxHeight = 'none';
-    proposal.style.overflowY = 'visible';
-
-    html2canvas(proposal, {
-        scrollY: -window.scrollY,
-        windowWidth: proposal.scrollWidth,
-        windowHeight: proposal.scrollHeight
-    }).then(canvas => {
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF({
-            orientation: 'p',
-            unit: 'mm',
-            format: 'a4'
+    const addText = (text, size = 10, style = "normal", gap = 8) => {
+        pdf.setFont("helvetica", style);
+        pdf.setFontSize(size);
+        pdf.splitTextToSize(String(text || ""), width).forEach(line => {
+            if (y > pageHeight - margin) {
+                pdf.addPage();
+                y = margin;
+            }
+            pdf.text(line, margin, y);
+            y += size + 6;
         });
+        y += gap;
+    };
 
-        const imgProps = pdf.getImageProperties(imgData);
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-        const pageHeight = pdf.internal.pageSize.getHeight();
+    addText("Broker Proposal Assistant", 18, "bold", 4);
+    addText(`Output type: ${state.outputType || "Professional PDF Proposal"}`, 10, "normal", 8);
+    addText(state.proposalType || "Real Estate Proposal", 14, "bold", 10);
+    addText("Executive summary", 13, "bold", 2);
+    addText(executiveSummary(), 10, "normal", 8);
+    addText("Client requirement summary", 13, "bold", 2);
+    addText(`Client: ${state.client.clientName}\nCompany: ${state.client.companyName}\nRequirement: ${state.client.requirementType}\nCity: ${state.client.city}\nLocation: ${state.client.preferredLocation}\nArea: ${state.client.areaRequired}\nBudget: ${state.client.budget}\nTimeline: ${state.client.timeline}\nNotes: ${state.client.importantNotes}`, 10, "normal", 8);
+    addText("Property overview", 13, "bold", 2);
+    addText(`Property: ${state.property.propertyName}\nLocation: ${state.property.propertyLocation}\nArea: ${state.property.propertyArea}\nHighlights: ${state.property.keyHighlights}`, 10, "normal", 8);
+    addText("Commercial terms", 13, "bold", 2);
+    addText(`Price/Rent: ${state.property.price}\nCAM: ${state.property.cam}\nSecurity Deposit: ${state.property.securityDeposit}\nLock-in: ${state.property.lockInPeriod}\nLease Term: ${state.property.leaseTerm}\nEscalation: ${state.property.escalation}\nAvailability: ${state.property.availability}`, 10, "normal", 8);
+    addText("Why this property fits", 13, "bold", 2);
+    addText(whyItFits(), 10, "normal", 8);
+    addText("Risks / points to verify", 13, "bold", 2);
+    addText(valueOrFallback(state.property.redFlags, "Confirm CAM breakup, area, documents, handover date, and commercial terms."), 10, "normal", 8);
+    addText("Recommended next steps", 13, "bold", 2);
+    addText("1. Confirm fit with client requirement.\n2. Schedule site visit.\n3. Verify commercial and legal terms.\n4. Share final offer or LOI.", 10, "normal", 8);
+    addText("Advisor contact details", 13, "bold", 2);
+    addText(`Advisor: ${state.advisor.advisorName || "To be added"}\nPhone: ${state.advisor.advisorPhone || "To be added"}\nEmail: ${state.advisor.advisorEmail || "To be added"}`, 10, "normal", 8);
+    addText("Client follow-up WhatsApp message", 13, "bold", 2);
+    addText(whatsappMessage().replace(/&amp;/g, "&"), 10, "normal", 8);
+    addText("Email draft", 13, "bold", 2);
+    addText(emailDraft().replace(/&amp;/g, "&"), 10, "normal", 8);
 
-        let heightLeft = pdfHeight;
-        let position = 0;
+    pdf.save(`${slugify(state.property.propertyName || state.client.clientName || "property-proposal")}.pdf`);
+}
 
-        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-        heightLeft -= pageHeight;
+function copyWhatsappMessage() {
+    const text = whatsappMessage()
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, "\"")
+        .replace(/&#039;/g, "'");
 
-        while (heightLeft > 0) {
-            // Use the conventional calculation for position to avoid confusion.
-            position = heightLeft - pdfHeight;
-            pdf.addPage();
-            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-            heightLeft -= pageHeight;
-        }
-
-        pdf.save('proposal.pdf');
-    }).catch(err => {
-        console.error('Error generating PDF', err);
-    }).finally(() => {
-        // Restore original styles no matter success/failure
-        proposal.style.maxHeight = originalMaxHeight;
-        proposal.style.overflowY = originalOverflowY;
+    navigator.clipboard.writeText(text).then(() => {
+        document.getElementById("copyWhatsappBtn").textContent = "Copied";
+        setTimeout(() => {
+            document.getElementById("copyWhatsappBtn").textContent = "Copy WhatsApp";
+        }, 1400);
     });
 }
 
-// small debounce helper and exposed debounced updater
-function debounce(fn, wait = 100) {
-    let timer = null;
-    return (...args) => {
-        clearTimeout(timer);
-        timer = setTimeout(() => fn(...args), wait);
-    };
+function resetApp() {
+    document.getElementById("proposalForm").reset();
+    state.currentStep = 1;
+    state.proposalType = "";
+    state.outputType = "";
+    state.client = {};
+    state.property = {};
+    state.advisor = {};
+    clearErrors();
+    showStep(1);
+    updatePreview();
 }
-window.debouncedUpdateTotalCost = debounce(() => updateTotalCost(), 120);
+
+function slugify(value) {
+    return String(value).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "proposal";
+}
+
+function escapeHtml(value) {
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
