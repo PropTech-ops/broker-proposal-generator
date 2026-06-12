@@ -1,1 +1,18 @@
-pathivara_proposal.html
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor folders
+.vscode/
+.idea/
+
+# Local environment files
+.env
+.env.local
+
+# Temporary files
+*.tmp
+*.log
+
+# Generated archives
+*.zip

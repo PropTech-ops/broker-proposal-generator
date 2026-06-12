@@ -3,275 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Broker assistant for creating real estate client proposals.">
-    <title>Broker Proposal Assistant</title>
+    <meta name="description" content="Block-based proposal builder for real estate brokers.">
+    <title>Broker Proposal Builder</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <button id="themeToggle" class="theme-toggle" type="button" aria-pressed="false">Dark Mode</button>
-
-    <main class="app-shell">
-        <header class="app-header">
+    <main id="homeScreen" class="home-shell">
+        <section class="home-hero">
             <div>
-                <p class="eyebrow">Broker Proposal Assistant</p>
-                <h1>Broker assistant for faster property proposals.</h1>
-                <p class="header-copy">Turn client notes, property details, and commercial terms into a clean proposal, WhatsApp message, and email draft.</p>
-            </div>
-            <aside class="summary-card" aria-live="polite">
-                <span>Current Proposal</span>
-                <strong id="summaryProposalType">Select a proposal type</strong>
-                <small id="summaryClient">Client details will appear here.</small>
-            </aside>
-        </header>
-
-        <nav class="stepper" aria-label="Proposal steps">
-            <div class="step-item is-active" data-step-indicator="1"><span>1</span><strong>Proposal Type</strong></div>
-            <div class="step-item" data-step-indicator="2"><span>2</span><strong>Client Requirement</strong></div>
-            <div class="step-item" data-step-indicator="3"><span>3</span><strong>Property Details</strong></div>
-            <div class="step-item" data-step-indicator="4"><span>4</span><strong>Generate Proposal</strong></div>
-            <div class="step-item" data-step-indicator="5"><span>5</span><strong>Review & Export</strong></div>
-        </nav>
-
-        <section class="builder-layout">
-            <form id="proposalForm" class="form-panel" novalidate>
-                <section id="stepProposalType" class="step-view is-active" data-step="1">
-                    <div class="section-heading">
-                        <div>
-                            <p class="eyebrow">Step 1</p>
-                            <h2>Choose proposal type</h2>
-                        </div>
-                    </div>
-                    <div id="proposalTypeGrid" class="choice-grid"></div>
-                    <p id="proposalTypeError" class="field-error" role="alert"></p>
-                    <div class="actions">
-                        <span></span>
-                        <button type="button" class="primary-btn" data-next-step="2">Continue</button>
-                    </div>
-                </section>
-
-                <section id="stepClientRequirement" class="step-view" data-step="2">
-                    <div class="section-heading">
-                        <div>
-                            <p class="eyebrow">Step 2</p>
-                            <h2>Client requirement</h2>
-                        </div>
-                    </div>
-                    <div class="form-grid">
-                        <label>
-                            <span>Client name</span>
-                            <input id="clientName" name="clientName" type="text" placeholder="Example: Rohit Sharma" required>
-                        </label>
-                        <label>
-                            <span>Company name</span>
-                            <input id="companyName" name="companyName" type="text" placeholder="Example: Apex Logistics Pvt Ltd" required>
-                        </label>
-                        <label>
-                            <span>Requirement type</span>
-                            <select id="requirementType" name="requirementType" required>
-                                <option value="">Select requirement type</option>
-                                <option>Lease</option>
-                                <option>Buy</option>
-                                <option>Rent</option>
-                                <option>Investment</option>
-                                <option>Landlord Pitch</option>
-                            </select>
-                        </label>
-                        <label>
-                            <span>City</span>
-                            <input id="city" name="city" type="text" placeholder="Example: Gurgaon" required>
-                        </label>
-                        <label>
-                            <span>Preferred location</span>
-                            <input id="preferredLocation" name="preferredLocation" type="text" placeholder="Example: Golf Course Road, Cyber City" required>
-                        </label>
-                        <label>
-                            <span>Area required</span>
-                            <input id="areaRequired" name="areaRequired" type="text" placeholder="Example: 8,000 - 10,000 sq ft" required>
-                        </label>
-                        <label>
-                            <span>Budget</span>
-                            <input id="budget" name="budget" type="text" placeholder="Example: INR 90 per sq ft or INR 8 Cr" required>
-                        </label>
-                        <label>
-                            <span>Timeline</span>
-                            <input id="timeline" name="timeline" type="text" placeholder="Example: Move-in within 60 days" required>
-                        </label>
-                        <label class="full-span">
-                            <span>Important notes</span>
-                            <textarea id="importantNotes" name="importantNotes" rows="4" placeholder="Example: Needs metro access, 30 parking slots, and plug-and-play condition."></textarea>
-                        </label>
-                        <label class="full-span">
-                            <span>Paste messy client requirement from WhatsApp or email</span>
-                            <textarea id="messyClientRequirement" name="messyClientRequirement" rows="5" placeholder="Paste raw client messages here. The preview will keep the useful context visible."></textarea>
-                        </label>
-                    </div>
-                    <p id="clientError" class="field-error" role="alert"></p>
-                    <div class="actions">
-                        <button type="button" class="secondary-btn" data-back-step="1">Back</button>
-                        <button type="button" class="primary-btn" data-next-step="3">Continue</button>
-                    </div>
-                </section>
-
-                <section id="stepPropertyDetails" class="step-view" data-step="3">
-                    <div class="section-heading">
-                        <div>
-                            <p class="eyebrow">Step 3</p>
-                            <h2>Property details</h2>
-                        </div>
-                    </div>
-                    <div class="form-grid">
-                        <label>
-                            <span>Property name</span>
-                            <input id="propertyName" name="propertyName" type="text" placeholder="Example: One Horizon Center" required>
-                        </label>
-                        <label>
-                            <span>Location</span>
-                            <input id="propertyLocation" name="propertyLocation" type="text" placeholder="Example: Golf Course Road, Gurgaon" required>
-                        </label>
-                        <label>
-                            <span>Area</span>
-                            <input id="propertyArea" name="propertyArea" type="text" placeholder="Example: 9,200 sq ft" required>
-                        </label>
-                        <label>
-                            <span>Rent or sale price</span>
-                            <input id="price" name="price" type="text" placeholder="Example: INR 105 per sq ft per month" required>
-                        </label>
-                        <label>
-                            <span>Maintenance / CAM</span>
-                            <input id="cam" name="cam" type="text" placeholder="Example: INR 18 per sq ft">
-                        </label>
-                        <label>
-                            <span>Security deposit</span>
-                            <input id="securityDeposit" name="securityDeposit" type="text" placeholder="Example: 6 months">
-                        </label>
-                        <label>
-                            <span>Lock-in period</span>
-                            <input id="lockInPeriod" name="lockInPeriod" type="text" placeholder="Example: 3 years">
-                        </label>
-                        <label>
-                            <span>Lease term</span>
-                            <input id="leaseTerm" name="leaseTerm" type="text" placeholder="Example: 5 years">
-                        </label>
-                        <label>
-                            <span>Escalation</span>
-                            <input id="escalation" name="escalation" type="text" placeholder="Example: 15% every 3 years">
-                        </label>
-                        <label>
-                            <span>Availability</span>
-                            <input id="availability" name="availability" type="text" placeholder="Example: Immediate / 30 days">
-                        </label>
-                        <label class="full-span">
-                            <span>Key highlights</span>
-                            <textarea id="keyHighlights" name="keyHighlights" rows="4" placeholder="Example: Grade A building, metro nearby, high visibility, efficient floor plate." required></textarea>
-                        </label>
-                        <label class="full-span">
-                            <span>Concerns / red flags</span>
-                            <textarea id="redFlags" name="redFlags" rows="4" placeholder="Example: Fit-out cost to verify, parking allocation pending, CAM breakup required."></textarea>
-                        </label>
-                        <label class="full-span">
-                            <span>Paste property notes from WhatsApp, brochure, or memory</span>
-                            <textarea id="propertyNotes" name="propertyNotes" rows="5" placeholder="Paste raw property notes, brochure text, or quick memory notes here."></textarea>
-                        </label>
-                    </div>
-                    <p id="propertyError" class="field-error" role="alert"></p>
-                    <div class="actions">
-                        <button type="button" class="secondary-btn" data-back-step="2">Back</button>
-                        <button type="button" class="primary-btn" data-next-step="4">Continue</button>
-                    </div>
-                </section>
-
-                <section id="stepGenerate" class="step-view" data-step="4">
-                    <div class="section-heading">
-                        <div>
-                            <p class="eyebrow">Step 4</p>
-                            <h2>Generate proposal</h2>
-                        </div>
-                    </div>
-                    <div class="choice-grid compact">
-                        <div class="choice-card">
-                            <label for="outputWhatsapp">
-                                <input id="outputWhatsapp" name="outputType" type="radio" value="Quick WhatsApp Summary" required>
-                                <span class="choice-title">Quick WhatsApp Summary</span>
-                                <span class="choice-desc">Short message a broker can send immediately after a call or site visit.</span>
-                            </label>
-                        </div>
-                        <div class="choice-card">
-                            <label for="outputEmail">
-                                <input id="outputEmail" name="outputType" type="radio" value="Client Email Draft">
-                                <span class="choice-title">Client Email Draft</span>
-                                <span class="choice-desc">Polished email format with context, property fit, and next actions.</span>
-                            </label>
-                        </div>
-                        <div class="choice-card">
-                            <label for="outputPdf">
-                                <input id="outputPdf" name="outputType" type="radio" value="Professional PDF Proposal">
-                                <span class="choice-title">Professional PDF Proposal</span>
-                                <span class="choice-desc">Structured proposal preview ready to export as a PDF.</span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="advisor-fields">
-                        <div class="section-subheading">
-                            <h3>Advisor contact details</h3>
-                            <p>These details appear in the proposal preview and exported PDF.</p>
-                        </div>
-                        <div class="form-grid">
-                            <label>
-                                <span>Advisor name</span>
-                                <input id="advisorName" name="advisorName" type="text" placeholder="Example: Sahil Mehta">
-                            </label>
-                            <label>
-                                <span>Advisor phone</span>
-                                <input id="advisorPhone" name="advisorPhone" type="tel" placeholder="Example: +91 98765 43210">
-                            </label>
-                            <label class="full-span">
-                                <span>Advisor email</span>
-                                <input id="advisorEmail" name="advisorEmail" type="email" placeholder="Example: sahil@brokerage.com">
-                            </label>
-                        </div>
-                    </div>
-                    <p id="generateError" class="field-error" role="alert"></p>
-                    <div class="actions">
-                        <button type="button" class="secondary-btn" data-back-step="3">Back</button>
-                        <button type="button" class="primary-btn" id="generateProposalBtn">Generate Proposal</button>
-                    </div>
-                </section>
-
-                <section id="stepReview" class="step-view" data-step="5">
-                    <div class="section-heading">
-                        <div>
-                            <p class="eyebrow">Step 5</p>
-                            <h2>Review & export</h2>
-                        </div>
-                        <div class="toolbar">
-                            <button type="button" class="secondary-btn" id="startOverBtn">Start over</button>
-                            <button type="button" class="primary-btn" id="downloadBtn">Download PDF</button>
-                        </div>
-                    </div>
-                    <div class="review-note">
-                        Review the live proposal on the right. Use the PDF export when you are ready to share a professional version.
-                    </div>
-                    <div class="actions">
-                        <button type="button" class="secondary-btn" data-back-step="4">Back</button>
-                        <button type="button" class="primary-btn" id="copyWhatsappBtn">Copy WhatsApp</button>
-                    </div>
-                </section>
-            </form>
-
-            <aside class="preview-panel">
-                <div class="preview-header">
-                    <p class="eyebrow">Live Preview</p>
-                    <h2 id="previewTitle">Proposal preview</h2>
+                <p class="eyebrow">Broker Proposal Builder</p>
+                <h1>Build client-ready real estate <em>proposals</em> in minutes.</h1>
+                <p>Turn broker notes, property details, and investment numbers into polished client documents.</p>
+                <div class="trust-bullets" aria-label="Product benefits">
+                    <span>No CRM setup</span>
+                    <span>Saves locally</span>
+                    <span>Built for brokers</span>
                 </div>
-                <article id="proposalPreview" class="proposal-preview" aria-live="polite"></article>
-            </aside>
+            </div>
+            <button id="createProposalBtn" class="primary-btn" type="button">Create New Proposal</button>
+        </section>
+
+        <section class="saved-section">
+            <div class="section-title">
+                <div>
+                    <p class="eyebrow">Saved locally</p>
+                    <h2>Saved proposals</h2>
+                </div>
+            </div>
+            <div id="savedProposalList" class="saved-list"></div>
         </section>
     </main>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <main id="builderScreen" class="builder-screen is-hidden">
+        <header id="topBar" class="top-bar">
+            <div id="setupSummary" class="setup-summary is-hidden">
+                <div class="app-mark">BP</div>
+                <strong class="app-name">Broker Proposal Builder</strong>
+                <button id="backHomeBtn" class="secondary-btn" type="button">Back to Home</button>
+                <div>
+                    <p class="eyebrow">Current proposal</p>
+                    <h2 id="topSummaryTitle">Untitled Broker Proposal</h2>
+                    <p id="topSummaryMeta">Draft</p>
+                </div>
+                <button id="editSetupBtn" class="secondary-btn" type="button">Edit Setup</button>
+                <button id="saveDraftBtn" class="primary-btn" type="button">Save Draft</button>
+                <button id="printBtn" class="secondary-btn" type="button">Print / Save PDF</button>
+            </div>
+
+            <div id="setupFields" class="setup-fields">
+                <div class="app-mark">BP</div>
+                <strong class="app-name">Broker Proposal Builder</strong>
+                <button id="backHomeSetupBtn" class="secondary-btn" type="button">Back to Home</button>
+                <label class="top-field title-field">
+                    <span>Proposal title</span>
+                    <input id="proposalTitleInput" type="text" placeholder="Example: Cyber City office proposal for Apex">
+                </label>
+                <label class="top-field">
+                    <span>Proposal type</span>
+                    <select id="proposalTypeSelect"></select>
+                </label>
+                <label class="top-field status-field">
+                    <span>Status</span>
+                    <select id="statusSelect">
+                        <option>Draft</option>
+                        <option>Ready</option>
+                        <option>Shared</option>
+                    </select>
+                </label>
+                <button id="saveDraftSetupBtn" class="primary-btn" type="button">Save Draft</button>
+                <button id="printSetupBtn" class="secondary-btn" type="button">Print / Save PDF</button>
+            </div>
+        </header>
+
+        <nav class="responsive-tabs" aria-label="Builder view">
+            <button class="is-active" type="button" data-view-tab="build">Build</button>
+            <button type="button" data-view-tab="preview">Preview</button>
+            <button type="button" data-view-tab="tools">Broker Tools</button>
+        </nav>
+
+        <section class="workspace-grid">
+            <section class="builder-column" data-view-panel="build">
+                <div class="panel">
+                    <div class="section-title">
+                        <div>
+                            <p class="eyebrow">Block library</p>
+                            <h2>Add proposal blocks</h2>
+                        </div>
+                    </div>
+                    <div id="blockLibrary" class="block-library"></div>
+                </div>
+
+                <div class="panel">
+                    <div class="section-title">
+                        <div>
+                            <p class="eyebrow">Active blocks</p>
+                            <h2>Edit proposal content</h2>
+                        </div>
+                        <p id="saveMessage" class="save-message" role="status"></p>
+                    </div>
+                    <div id="activeBlocks" class="active-blocks"></div>
+                </div>
+            </section>
+
+            <aside class="preview-column" data-view-panel="preview">
+                <div class="preview-toolbar">
+                    <div>
+                        <p class="eyebrow">Live preview</p>
+                        <h2>Proposal document</h2>
+                    </div>
+                    <div class="preview-actions">
+                        <button id="copyFullBtn" class="secondary-btn small-btn" type="button">Copy Full Proposal</button>
+                        <button id="copyWhatsappBtn" class="secondary-btn small-btn" type="button">Copy WhatsApp</button>
+                        <button id="copyEmailBtn" class="primary-btn small-btn" type="button">Copy Email</button>
+                    </div>
+                    <p class="print-helper">Tip: In the browser print dialog, turn off Headers and Footers for a clean PDF.</p>
+                    <label class="include-followups">
+                        <input id="includeFollowupsPrint" type="checkbox">
+                        <span>Include broker follow-up messages in PDF</span>
+                    </label>
+                </div>
+                <article id="proposalPreview" class="proposal-document" aria-live="polite"></article>
+            </aside>
+
+            <aside class="broker-tools-column" data-view-panel="tools">
+                <div class="panel broker-tools-app-panel">
+                    <div class="section-title">
+                        <div>
+                            <p class="eyebrow">Broker Tools</p>
+                            <h2>Follow-up drafts</h2>
+                        </div>
+                    </div>
+                    <p class="broker-tools-note">WhatsApp and email drafts are broker tools and will not appear in the client PDF unless the checkbox is selected.</p>
+                    <label class="include-followups">
+                        <input id="includeFollowupsPrintSetup" type="checkbox">
+                        <span>Include broker follow-up messages in PDF</span>
+                    </label>
+                    <p class="print-helper">Tip: In the browser print dialog, turn off Headers and Footers for a clean PDF.</p>
+                    <div class="preview-actions">
+                        <button id="toolsCopyWhatsappBtn" class="secondary-btn small-btn" type="button">Copy WhatsApp</button>
+                        <button id="toolsCopyEmailBtn" class="primary-btn small-btn" type="button">Copy Email</button>
+                    </div>
+                    <div id="brokerToolsMount" class="broker-tools-mount"></div>
+                </div>
+            </aside>
+        </section>
+
+        <div class="mobile-action-bar">
+            <button id="mobileSaveBtn" class="primary-btn small-btn" type="button">Save Draft</button>
+            <a class="secondary-btn small-btn" href="#proposalPreview">Preview</a>
+            <button id="mobilePrintBtn" class="secondary-btn small-btn" type="button">Print</button>
+        </div>
+    </main>
+
     <script src="scripts.js"></script>
 </body>
 </html>
