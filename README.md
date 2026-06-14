@@ -117,6 +117,12 @@ const blockTemplates
 8. Save as PDF.
 9. Deploy if needed.
 
+## Video Tutorial Companion Guide
+
+The guide is available through GitHub Pages after Pages is enabled from the `/docs` folder.
+
+To publish the guide, go to Settings -> Pages -> Deploy from a branch -> main -> /docs.
+
 ## Tech Stack
 
 - HTML

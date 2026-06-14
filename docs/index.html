@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Broker Proposal Builder Tutorial Guide</title>
+  <meta name="description" content="Step-by-step guide for the Broker Proposal Builder video tutorial." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #f4f1ea;
+      --paper-2: #e8e4dc;
+      --ink: #1a1a1a;
+      --muted: rgba(26, 26, 26, 0.64);
+      --line: rgba(26, 26, 26, 0.14);
+      --dark: #121212;
+      --accent: #c2410c;
+      --green: #8ca000;
+      --white: #ffffff;
+      --radius: 22px;
+      --shadow: 0 20px 70px rgba(0,0,0,.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--paper-2);
+      color: var(--ink);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .page {
+      width: min(100%, 112rem);
+      margin: 0 auto;
+      background: var(--paper);
+      min-height: 100vh;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 18px clamp(18px, 4vw, 56px);
+      border-bottom: 1px solid var(--line);
+      background: rgba(244, 241, 234, 0.92);
+      backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .logo {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      background: var(--ink);
+      color: var(--paper);
+      border-radius: 10px;
+      font-size: 12px;
+      font-family: "JetBrains Mono", monospace;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .nav-links a:hover { color: var(--ink); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+      padding: 13px 18px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 800;
+      transition: .2s ease;
+      cursor: pointer;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+
+    .btn.secondary {
+      background: #fff;
+      color: var(--ink);
+      border-color: var(--line);
+    }
+
+    .hero {
+      position: relative;
+      padding: clamp(52px, 9vw, 116px) clamp(20px, 5vw, 72px) 56px;
+      border-bottom: 1px solid var(--line);
+      background:
+        radial-gradient(circle at 18% 15%, rgba(194,65,12,.12), transparent 32%),
+        linear-gradient(180deg, #f8f5ee, var(--paper));
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+      font-weight: 700;
+      color: rgba(26,26,26,.66);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 99px;
+      background: var(--accent);
+      box-shadow: 0 0 0 5px rgba(194,65,12,.12);
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      letter-spacing: -0.045em;
+      line-height: .98;
+    }
+
+    h1 {
+      max-width: 1050px;
+      margin-top: 28px;
+      font-size: clamp(48px, 8vw, 116px);
+      font-family: "Instrument Serif", Georgia, serif;
+      font-weight: 400;
+    }
+
+    h1 em {
+      color: var(--accent);
+      font-style: italic;
+    }
+
+    .hero p {
+      max-width: 760px;
+      margin: 26px 0 0;
+      font-size: clamp(17px, 2vw, 22px);
+      color: var(--muted);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 32px;
+    }
+
+    .stats {
+      margin-top: 54px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border: 1px solid var(--line);
+      background: var(--line);
+      gap: 1px;
+      border-radius: 18px;
+      overflow: hidden;
+    }
+
+    .stat {
+      background: var(--paper);
+      padding: 26px;
+    }
+
+    .stat .label {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: rgba(26,26,26,.52);
+      font-weight: 700;
+    }
+
+    .stat .value {
+      margin-top: 12px;
+      font-size: clamp(28px, 4vw, 46px);
+      line-height: 1;
+      font-family: "Instrument Serif", Georgia, serif;
+      font-weight: 400;
+    }
+
+    .stat p {
+      margin: 10px 0 0;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .section {
+      padding: clamp(56px, 8vw, 96px) clamp(20px, 5vw, 72px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(260px, .9fr);
+      gap: 40px;
+      align-items: end;
+      margin-bottom: 42px;
+    }
+
+    .kicker {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .13em;
+      color: var(--accent);
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    h2 {
+      font-size: clamp(36px, 5vw, 68px);
+      font-family: "Instrument Serif", Georgia, serif;
+      font-weight: 400;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+
+    .card {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.55);
+      border-radius: var(--radius);
+      padding: 26px;
+    }
+
+    .card.dark {
+      background: var(--dark);
+      color: var(--paper);
+      border-color: rgba(255,255,255,.12);
+    }
+
+    .card h3 {
+      font-size: 24px;
+      font-family: Inter, sans-serif;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.04em;
+    }
+
+    .card p { color: var(--muted); margin: 12px 0 0; }
+    .card.dark p { color: rgba(244,241,234,.68); }
+
+    .mono {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: rgba(26,26,26,.48);
+      font-weight: 800;
+    }
+
+    .card.dark .mono { color: rgba(244,241,234,.45); }
+
+    .timeline {
+      display: grid;
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .step {
+      background: var(--paper);
+      display: grid;
+      grid-template-columns: 90px 1fr 180px;
+      gap: 22px;
+      padding: 28px;
+      align-items: start;
+    }
+
+    .step-num {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .step h3 {
+      font-family: Inter, sans-serif;
+      letter-spacing: -0.035em;
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .step p {
+      margin: 10px 0 0;
+      color: var(--muted);
+    }
+
+    .time {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: rgba(26,26,26,.48);
+      text-align: right;
+      font-weight: 700;
+    }
+
+    .codebox {
+      background: #111;
+      color: #f4f1ea;
+      border-radius: 18px;
+      padding: 22px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 13px;
+      line-height: 1.65;
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .checklist {
+      display: grid;
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .checklist li {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.48);
+      border-radius: 14px;
+      color: var(--muted);
+    }
+
+    .check {
+      flex: 0 0 22px;
+      width: 22px;
+      height: 22px;
+      display: grid;
+      place-items: center;
+      border-radius: 7px;
+      background: var(--ink);
+      color: var(--paper);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .banner {
+      background: var(--dark);
+      color: var(--paper);
+      padding: clamp(48px, 8vw, 90px) clamp(20px, 5vw, 72px);
+      display: grid;
+      grid-template-columns: 1fr .8fr;
+      gap: 44px;
+      align-items: center;
+    }
+
+    .banner h2 { color: var(--paper); }
+    .banner p { color: rgba(244,241,234,.66); font-size: 18px; }
+
+    footer {
+      padding: 36px clamp(20px, 5vw, 72px);
+      background: var(--dark);
+      color: rgba(244,241,234,.62);
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+      font-size: 14px;
+    }
+
+    footer strong { color: var(--paper); }
+
+    .toc {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 30px;
+    }
+
+    .toc a {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 10px 13px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(26,26,26,.68);
+    }
+
+    .toc a:hover { color: var(--ink); border-color: rgba(26,26,26,.28); }
+
+    @media (max-width: 980px) {
+      .nav-links { display: none; }
+      .stats, .grid.cols-3, .grid.cols-2, .section-head, .banner { grid-template-columns: 1fr; }
+      .step { grid-template-columns: 60px 1fr; }
+      .time { grid-column: 2; text-align: left; }
+    }
+
+    @media (max-width: 620px) {
+      .nav { align-items: flex-start; flex-direction: column; }
+      .hero-actions .btn { width: 100%; }
+      .step { grid-template-columns: 1fr; }
+      .time { grid-column: auto; }
+      .stat, .card, .step { padding: 20px; }
+      .toc a { width: 100%; text-align: center; }
+    }
+
+    @media print {
+      .nav, .hero-actions, footer { display: none !important; }
+      body, .page { background: #fff; box-shadow: none; }
+      .section, .hero, .banner { break-inside: avoid; page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <nav class="nav">
+      <a class="brand" href="#top">
+        <span class="logo">BP</span>
+        <span>Broker Proposal Builder Guide</span>
+      </a>
+      <div class="nav-links">
+        <a href="#workflow">Workflow</a>
+        <a href="#steps">Steps</a>
+        <a href="#inputs">Sample Inputs</a>
+        <a href="#resources">Resources</a>
+      </div>
+
+    </nav>
+
+    <header id="top" class="hero">
+      <span class="eyebrow"><span class="dot"></span> Video companion guide</span>
+      <h1>Build your own real estate <em>proposal builder</em>.</h1>
+      <p>
+        Follow the exact steps from the tutorial: copy the GitHub template, open it in Codex,
+        customize proposal blocks, generate a Dubai-style investment proposal, and save a clean client PDF.
+      </p>
+      <div class="hero-actions">
+        <a class="btn" href="https://github.com/PropTech-ops/broker-proposal-generator">Use GitHub Template</a>
+        <a class="btn secondary" href="#inputs">Use Sample Inputs</a>
+      </div>
+
+      <div class="toc">
+        <a href="#what">What you will build</a>
+        <a href="#workflow">Video workflow</a>
+        <a href="#steps">Step-by-step</a>
+        <a href="#inputs">Dubai sample</a>
+        <a href="#checklist">Before PDF</a>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="label">Stack</div>
+          <div class="value">HTML</div>
+          <p>Simple HTML, CSS, JavaScript and localStorage.</p>
+        </div>
+        <div class="stat">
+          <div class="label">Outcome</div>
+          <div class="value">PDF</div>
+          <p>Client-ready proposal using browser print / Save as PDF.</p>
+        </div>
+        <div class="stat">
+          <div class="label">Time</div>
+          <div class="value">12 hrs</div>
+          <p>Enough to copy, run, customize and test the starter kit.</p>
+        </div>
+      </div>
+    </header>
+
+    <section id="what" class="section">
+      <div class="section-head">
+        <div>
+          <div class="kicker">What this tutorial covers</div>
+          <h2>A practical AI-coding project for brokers.</h2>
+        </div>
+        <p>
+          This is not a heavy CRM. It is a small internal tool that turns broker notes,
+          property details, and commercial terms into a clean client proposal.
+        </p>
+      </div>
+
+      <div class="grid cols-3">
+        <div class="card">
+          <div class="mono">01 · Copy</div>
+          <h3>Use the GitHub template</h3>
+          <p>Create your own copy of the starter repo so you can safely edit and customize it.</p>
+        </div>
+        <div class="card">
+          <div class="mono">02 · Customize</div>
+          <h3>Guide Codex step-by-step</h3>
+          <p>Ask Codex to explain files, update proposal blocks, and polish the PDF design.</p>
+        </div>
+        <div class="card">
+          <div class="mono">03 · Output</div>
+          <h3>Generate a proposal PDF</h3>
+          <p>Use sample Dubai investment inputs and export a client-facing PDF memo.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="workflow" class="section">
+      <div class="section-head">
+        <div>
+          <div class="kicker">Video workflow</div>
+          <h2>Use this page while watching.</h2>
+        </div>
+        <p>
+          Pause the video at each checkpoint, complete the action, then continue.
+          The aim is not to memorize code; the aim is to learn the workflow.
+        </p>
+      </div>
+
+      <div class="timeline">
+        <div class="step">
+          <div class="step-num">01</div>
+          <div>
+            <h3>Open the template repository</h3>
+
+          </div>
+          <div class="time">23 min</div>
+        </div>
+        <div class="step">
+          <div class="step-num">02</div>
+          <div>
+            <h3>Run the app locally</h3>
+            <p>Open <strong>index.html</strong> or run a local server from the project folder.</p>
+          </div>
+          <div class="time">35 min</div>
+        </div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <div>
+            <h3>Ask Codex to explain the repo</h3>
+            <p>Understand the main files before asking AI to make changes.</p>
+          </div>
+          <div class="time">58 min</div>
+        </div>
+        <div class="step">
+          <div class="step-num">04</div>
+          <div>
+            <h3>Create a Dubai investment proposal</h3>
+            <p>Use the sample blocks below to test the full workflow.</p>
+          </div>
+          <div class="time">1015 min</div>
+        </div>
+        <div class="step">
+          <div class="step-num">05</div>
+          <div>
+            <h3>Save as clean PDF</h3>
+            <p>Use browser print, turn off headers/footers, and save the proposal.</p>
+          </div>
+          <div class="time">35 min</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="steps" class="section">
+      <div class="section-head">
+        <div>
+          <div class="kicker">Step-by-step actions</div>
+          <h2>Follow these exact steps.</h2>
+        </div>
+        <p>
+          This section is designed as your checklist while watching the tutorial.
+        </p>
+      </div>
+
+      <div class="grid cols-2">
+        <div class="card">
+          <div class="mono">Step 1</div>
+          <h3>Copy the template</h3>
+          <p>On GitHub, click <strong>Use this template</strong>, name your repo, and create your own copy.</p>
+        </div>
+        <div class="card">
+          <div class="mono">Step 2</div>
+          <h3>Open in your editor</h3>
+          <p>Open your copy in Codex, Google Antigravity, VS Code, or any editor.</p>
+        </div>
+        <div class="card">
+          <div class="mono">Step 3</div>
+          <h3>Run locally</h3>
+          <p>Use a local server or open the HTML file directly for a quick preview.</p>
+          <pre class="codebox">cd project-folder
+python -m http.server 8000
+
+Open:
+http://localhost:8000/index.html</pre>
+        </div>
+        <div class="card">
+          <div class="mono">Step 4</div>
+          <h3>Use Codex prompt</h3>
+          <p>Start with understanding, not code changes.</p>
+          <pre class="codebox">Explain this repo like I am a real estate professional,
+not a developer.
+
+Tell me:
+1. What each main file does
+2. Where the proposal blocks are
+3. Where the PDF/print design is
+4. What I should customize first</pre>
+        </div>
+      </div>
+    </section>
+
+    <section id="inputs" class="section">
+      <div class="section-head">
+        <div>
+          <div class="kicker">Sample test case</div>
+          <h2>Dubai office investment proposal.</h2>
+        </div>
+        <p>
+          Use this sample data to test the builder and generate your first proposal PDF.
+        </p>
+      </div>
+
+      <div class="grid cols-2">
+        <div class="card">
+          <div class="mono">Client Requirement</div>
+          <h3>Rohan Mehta · Mehta Global Holdings</h3>
+          <p><strong>Goal:</strong> Acquire a ready commercial office in Dubai for rental income and long-term appreciation.</p>
+          <p><strong>Location:</strong> Business Bay / Downtown Dubai / DIFC fringe</p>
+          <p><strong>Budget:</strong> AED 3,000,000 to AED 4,500,000</p>
+          <p><strong>Target Yield:</strong> 8%+</p>
+        </div>
+        <div class="card">
+          <div class="mono">Property Snapshot</div>
+          <h3>Iris Bay Office Tower</h3>
+          <p><strong>Location:</strong> Business Bay, Dubai</p>
+          <p><strong>Type:</strong> Commercial Office</p>
+          <p><strong>Area:</strong> 1,520 sq.ft</p>
+          <p><strong>Availability:</strong> Vacant on transfer</p>
+          <p><strong>Highlights:</strong> Fully fitted, canal-facing tower, close to Downtown Dubai, access to Sheikh Zayed Road.</p>
+        </div>
+        <div class="card">
+          <div class="mono">Investment Snapshot</div>
+          <h3>Numbers to enter</h3>
+          <p><strong>Sale Price:</strong> AED 3,650,000</p>
+          <p><strong>Expected Monthly Rent:</strong> AED 27,500</p>
+          <p><strong>Annual Rental Income:</strong> AED 330,000</p>
+          <p><strong>Expected Yield:</strong> 9.0%</p>
+          <p><strong>Occupancy:</strong> Vacant</p>
+        </div>
+        <div class="card">
+          <div class="mono">Risks & Next Steps</div>
+          <h3>Due diligence items</h3>
+          <p>Verify title deed, service charges, parking allocation, fit-out/MEP condition, rental comparables, and exit liquidity.</p>
+          <p>Proceed only after site inspection and document review.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="checklist" class="section">
+      <div class="section-head">
+        <div>
+          <div class="kicker">Before saving PDF</div>
+          <h2>Final clean export checklist.</h2>
+        </div>
+        <p>
+          These small settings make the difference between an amateur export and a client-ready document.
+        </p>
+      </div>
+
+      <ul class="checklist">
+        <li><span class="check"></span><span>Client PDF does not include WhatsApp or email drafts unless you intentionally add them as an appendix.</span></li>
+        <li><span class="check"></span><span>Browser print setting: turn off <strong>Headers and footers</strong>.</span></li>
+        <li><span class="check"></span><span>Turn on <strong>Background graphics</strong> if your PDF design uses accent backgrounds.</span></li>
+        <li><span class="check"></span><span>Review all numbers, property details, service charges, ownership documents, and assumptions before sharing.</span></li>
+        <li><span class="check"></span><span>Save one sample PDF and open it again to check page breaks before sending to a client.</span></li>
+      </ul>
+    </section>
+
+    <section id="resources" class="banner">
+      <div>
+        <div class="kicker">Resources</div>
+        <h2>Copy the repo, then customize your version.</h2>
+        <p>
+          This guide is a companion to the video tutorial. Use it as your checklist,
+          and use the GitHub template as your starting point.
+        </p>
+      </div>
+      <div class="card dark">
+        <div class="mono">Main link</div>
+        <h3>GitHub Template Repo</h3>
+
+        <p style="margin-top:18px;">
+          <a class="btn" href="https://github.com/PropTech-ops/broker-proposal-generator">Open GitHub Template</a>
+        </p>
+      </div>
+    </section>
+
+    <footer>
+      <div><strong>Broker Proposal Builder Guide</strong> · Tutorial companion site</div>
+      <div>Built for real estate professionals learning AI coding.</div>
+    </footer>
+  </div>
+</body>
+</html>
